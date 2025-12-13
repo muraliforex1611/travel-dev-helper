@@ -103,6 +103,23 @@ app.post('/tools/run_npm_script', (req, res) => {
     });
   });
 });
+// SSE endpoint for MCP compatibility
+app.get('/sse', (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  
+  const data = {
+    name: "travel-dev-helper",
+    version: "1.0.0",
+    capabilities: {
+      tools: ["list_files", "read_file", "write_file", "run_npm_script"]
+    }
+  };
+  
+  res.write(`data: ${JSON.stringify(data)}\n\n`);
+  res.end();
+});
 
 // Start server
 const PORT = process.env.PORT || 3000;

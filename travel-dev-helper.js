@@ -413,17 +413,33 @@ app.post('/tools/fetch', async (req, res) => {
 });
 
 //
-// SSE endpoint (basic scaffold; we will refine later)
+// SSE endpoint (MCP-style simple stream)
 //
 app.get('/sse', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
 
-  res.write(`event: ping\n`);
-  res.write(`data: {"message":"sse connection ok"}\n\n`);
+  const payload = {
+    content: [
+      {
+        type: 'text',
+        text: 'travel-dev-helper SSE connection ok'
+      }
+    ]
+  };
+
+  res.write(`event: message\n`);
+  res.write(`data: ${JSON.stringify(payload)}\n\n`);
+
+  const interval = setInterval(() => {
+    res.write(`event: ping\n`);
+    res.write(`data: {"ts": ${Date.now()}}\n\n`);
+  }, 25000);
 
   req.on('close', () => {
+    clearInterval(interval);
     res.end();
   });
 });

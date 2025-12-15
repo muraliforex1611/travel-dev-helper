@@ -232,7 +232,6 @@ app.post('/tools/search', async (req, res) => {
   try {
     const { query = '', limit = 5 } = req.body || {};
 
-    // Simple in-memory documents index – later customize
     const docs = [
       {
         id: 'doc-1',
@@ -296,6 +295,116 @@ app.post('/tools/search', async (req, res) => {
           text: JSON.stringify({
             results: [],
             error: 'Internal server error in search tool'
+          })
+        }
+      ]
+    });
+  }
+});
+
+//
+// TOOLS: fetch (MCP spec style)
+//
+app.post('/tools/fetch', async (req, res) => {
+  try {
+    const { id, url } = req.body || {};
+
+    const docs = [
+      {
+        id: 'doc-1',
+        title: 'Travel MCP Server Overview',
+        url: 'https://github.com/muraliforex1611/travel-dev-helper',
+        text: 'Overview of the travel-dev-helper MCP server built with Node.js and Express, deployed on Render, used to assist in developing a travel management webapp.',
+        metadata: {
+          source: 'github',
+          repo: 'muraliforex1611/travel-dev-helper',
+          topic: 'mcp-server'
+        }
+      },
+      {
+        id: 'doc-2',
+        title: 'Render Live Server',
+        url: 'https://travel-dev-helper.onrender.com',
+        text: 'Live MCP server endpoint hosted on Render free tier, exposing health, tools, and SSE endpoints for ChatGPT integration.',
+        metadata: {
+          source: 'render',
+          service: 'web-service',
+          topic: 'deployment'
+        }
+      },
+      {
+        id: 'doc-3',
+        title: 'OpenAI MCP Docs',
+        url: 'https://platform.openai.com/docs/mcp',
+        text: 'High-level documentation for Model Context Protocol, explaining tools, transport, and integration with OpenAI models.',
+        metadata: {
+          source: 'docs',
+          provider: 'openai',
+          topic: 'specification'
+        }
+      },
+      {
+        id: 'doc-4',
+        title: 'MCP Specification Site',
+        url: 'https://modelcontextprotocol.io',
+        text: 'Official site for the Model Context Protocol, including detailed specification for tools like search and fetch, and SSE transport.',
+        metadata: {
+          source: 'website',
+          provider: 'mcp',
+          topic: 'specification'
+        }
+      }
+    ];
+
+    let doc = null;
+
+    if (id) {
+      doc = docs.find(d => d.id === id);
+    } else if (url) {
+      doc = docs.find(d => d.url === url);
+    }
+
+    if (!doc) {
+      return res.status(404).json({
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'Document not found',
+              id,
+              url
+            })
+          }
+        ]
+      });
+    }
+
+    const innerPayload = {
+      id: doc.id,
+      title: doc.title,
+      text: doc.text,
+      url: doc.url,
+      metadata: doc.metadata
+    };
+
+    const responseBody = {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(innerPayload)
+        }
+      ]
+    };
+
+    res.json(responseBody);
+  } catch (err) {
+    console.error('Error in /tools/fetch:', err);
+    res.status(500).json({
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            error: 'Internal server error in fetch tool'
           })
         }
       ]
